@@ -7,6 +7,9 @@ A Puppeteer-based web crawler designed to gather Wikipedia pages data and filter
 - 🤖 **Puppeteer-powered**: Headless browser crawling with full JavaScript support
 - 📄 **jusText Integration**: Intelligent text extraction that filters out boilerplate content
 - 🌐 **Wikipedia Optimized**: Specifically designed for crawling Wikipedia pages
+- 🔗 **Link Extraction**: Extract all Wikipedia links from any page
+- 🔄 **Recursive Crawling**: Follow links recursively with configurable depth and page limits
+- 📊 **URL Tree Visualization**: Generate markdown tree diagrams of crawled page relationships
 - 💾 **Data Export**: Save crawled data in structured JSON format
 - ⚡ **Multiple Pages**: Support for crawling multiple Wikipedia URLs
 - 🎯 **Clean Content**: Extracts only the main article content for AI training purposes
@@ -66,7 +69,27 @@ Batch process multiple pages with detailed analytics:
 node examples/advanced.js
 ```
 
-#### 4. Standalone Example
+#### 4. Link Extraction Example
+Extract all Wikipedia links from a page:
+
+```bash
+node examples/link-extraction.js
+```
+
+#### 5. Recursive Crawl Example
+Recursively crawl Wikipedia pages up to a specified limit (up to 100 pages):
+
+```bash
+node examples/recursive-crawl.js
+```
+
+This example demonstrates:
+- Recursive crawling with depth and page limits
+- Automatic link extraction and following
+- URL tree visualization in markdown format
+- Progress tracking and statistics
+
+#### 6. Standalone Example
 A simpler standalone example:
 
 ```bash
@@ -98,8 +121,19 @@ const urls = [
 ];
 const results = await crawler.crawlMultiple(urls);
 
-// Save to file
+// Extract links from a page
+const links = await crawler.getWikipediaLinks('https://en.wikipedia.org/wiki/Machine_learning');
+console.log(`Found ${links.length} links`);
+
+// Recursive crawling
+const recursiveResult = await crawler.crawlRecursive(
+  'https://en.wikipedia.org/wiki/Artificial_intelligence',
+  { maxPages: 100, maxDepth: 3 }
+);
+
+// Save results
 await crawler.saveToFile(results, 'my_results.json');
+await crawler.saveTreeToMarkdown(recursiveResult.linkTree, 'url_tree.md');
 
 await crawler.close();
 ```
@@ -139,12 +173,42 @@ Crawl multiple Wikipedia pages.
 
 **Returns:** Array of crawled page data objects
 
+##### `async getWikipediaLinks(url)`
+Extract all Wikipedia article links from a page.
+
+**Parameters:**
+- `url` (string): The Wikipedia page URL to extract links from
+
+**Returns:** Array of Wikipedia article URLs found on the page (Array<string>)
+
+##### `async crawlRecursive(startUrl, options)`
+Recursively crawl Wikipedia pages following links.
+
+**Parameters:**
+- `startUrl` (string): The starting Wikipedia page URL
+- `options` (Object): Options for recursive crawling
+  - `maxPages` (number): Maximum number of pages to crawl. Default: `100`
+  - `maxDepth` (number): Maximum depth to crawl. Default: `3`
+
+**Returns:** Object containing:
+- `crawledData`: Array of crawled page data
+- `linkTree`: Tree structure of URLs and their relationships
+- `totalPages`: Total number of unique pages visited
+- `visitedUrls`: Array of all visited URLs
+
 ##### `async saveToFile(data, filename)`
 Save crawled data to a JSON file.
 
 **Parameters:**
 - `data` (Object|Array): The data to save
 - `filename` (string): Output filename. Default: `'crawled_data.json'`
+
+##### `async saveTreeToMarkdown(linkTree, filename)`
+Save the link tree as a markdown file with tree visualization.
+
+**Parameters:**
+- `linkTree` (Object): The link tree object from `crawlRecursive()`
+- `filename` (string): Output filename. Default: `'url_tree.md'`
 
 ##### `async close()`
 Close the browser and cleanup resources.
