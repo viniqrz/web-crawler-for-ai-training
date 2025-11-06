@@ -24,15 +24,50 @@ npm install
 
 ## Usage
 
-### Basic Usage
+### Quick Start
 
-Run the example crawler:
+Run the default example to crawl three AI-related Wikipedia pages:
 
 ```bash
 npm start
 ```
 
-This will crawl three example Wikipedia pages (Artificial Intelligence, Machine Learning, and Natural Language Processing) and save the results to `output/wikipedia_crawl_results.json`.
+This will:
+1. Crawl Wikipedia pages for Artificial Intelligence, Machine Learning, and Natural Language Processing
+2. Extract and filter the main content using jusText
+3. Save results to `output/wikipedia_crawl_results.json`
+
+### Examples
+
+The repository includes several examples demonstrating different use cases:
+
+#### 1. Simple Example
+Crawl a single Wikipedia page:
+
+```bash
+node examples/simple.js
+```
+
+#### 2. Custom Configuration
+Use custom settings and output directory:
+
+```bash
+node examples/custom-config.js
+```
+
+#### 3. Advanced Example
+Batch process multiple pages with detailed analytics:
+
+```bash
+node examples/advanced.js
+```
+
+#### 4. Standalone Example
+A simpler standalone example:
+
+```bash
+node example.js
+```
 
 ### Custom Usage
 
@@ -125,6 +160,53 @@ The crawler produces JSON output with the following structure:
   }
 ]
 ```
+
+## Configuration
+
+You can customize the crawler behavior using the `config.json` file:
+
+```json
+{
+  "crawler": {
+    "headless": true,
+    "outputDir": "./output",
+    "executablePath": null
+  },
+  "justext": {
+    "language": "English",
+    "lengthLow": 70,
+    "lengthHigh": 200,
+    "stopwordsLow": 0.30,
+    "stopwordsHigh": 0.32,
+    "maxLinkDensity": 0.2,
+    "maxHeadingDistance": 200
+  },
+  "crawling": {
+    "delayBetweenRequests": 1000,
+    "timeout": 30000
+  }
+}
+```
+
+### Configuration Options
+
+#### Crawler Options
+- `headless`: Run browser in headless mode (default: `true`)
+- `outputDir`: Directory for output files (default: `./output`)
+- `executablePath`: Path to Chrome/Chromium executable (default: `null`, uses bundled Chromium)
+
+#### jusText Options
+- `language`: Stoplist language for text filtering (default: `'English'`)
+- `lengthLow`: Minimum paragraph length in characters (default: `70`)
+- `lengthHigh`: Threshold for short paragraphs (default: `200`)
+- `stopwordsLow`: Minimum stopword density (default: `0.30`)
+- `stopwordsHigh`: Maximum stopword density (default: `0.32`)
+- `maxLinkDensity`: Maximum ratio of link text (default: `0.2`)
+- `maxHeadingDistance`: Maximum distance from heading (default: `200`)
+
+#### Crawling Options
+- `delayBetweenRequests`: Delay in milliseconds between page requests (default: `1000`)
+- `timeout`: Page load timeout in milliseconds (default: `30000`)
 
 ## How It Works
 
