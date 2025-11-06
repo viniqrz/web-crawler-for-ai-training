@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import jusText from '@smodin/justext';
+import { rawHtml } from '@smodin/justext';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -22,10 +22,18 @@ class WikipediaCrawler {
    */
   async init() {
     try {
-      this.browser = await puppeteer.launch({
+      // Try to use system Chrome if Puppeteer's Chrome is not available
+      const launchOptions = {
         headless: this.options.headless,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      };
+      
+      // If executablePath is provided in options, use it
+      if (this.options.executablePath) {
+        launchOptions.executablePath = this.options.executablePath;
+      }
+      
+      this.browser = await puppeteer.launch(launchOptions);
       console.log('Browser initialized successfully');
     } catch (error) {
       console.error('Failed to initialize browser:', error.message);
@@ -98,8 +106,8 @@ class WikipediaCrawler {
   async filterTextWithJusText(html) {
     try {
       // jusText extracts the main content and removes boilerplate
-      const paragraphs = await jusText(html, {
-        stoplist: 'English', // Use English stoplist
+      // rawHtml function signature: rawHtml(htmlText, language, format, options)
+      const paragraphs = rawHtml(html, 'English', 'unformatted', {
         lengthLow: 70,       // Minimum length for a paragraph
         lengthHigh: 200,     // Maximum length for short paragraphs
         stopwordsLow: 0.30,  // Minimum stopwords density
@@ -108,9 +116,9 @@ class WikipediaCrawler {
         maxHeadingDistance: 200 // Maximum heading distance
       });
 
-      // Join paragraphs with double newlines
+      // Filter for good and neargood paragraphs and join with double newlines
       const text = paragraphs
-        .filter(p => p.class === 'good' || p.class === 'neargood')
+        .filter(p => p.classType === 'good' || p.classType === 'neargood')
         .map(p => p.text)
         .join('\n\n');
 
