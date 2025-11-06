@@ -1,0 +1,25 @@
+{
+  "name": "web-crawler-for-ai-training",
+  "version": "1.0.0",
+  "description": "Puppeteer web crawler to gather Wikipedia pages data and filter text content with jusText",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "crawl": "node src/crawler.js"
+  },
+  "keywords": [
+    "web-crawler",
+    "puppeteer",
+    "wikipedia",
+    "justext",
+    "ai-training",
+    "data-collection"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^22.0.0",
+    "@smodin/justext": "^0.1.1"
+  }
+}
