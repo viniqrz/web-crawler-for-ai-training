@@ -9,6 +9,8 @@ output/
 *.json
 *.txt
 !package.json
+!package-lock.json
+!config.json
 
 # Environment files
 .env
