@@ -20,6 +20,10 @@ cd web-crawler-for-ai-training
 
 # Install dependencies
 npm install
+
+# Optional: Set Chrome path if needed
+export CHROME_PATH=/path/to/chrome  # Linux/Mac
+# or on Windows: set CHROME_PATH=C:\Path\To\chrome.exe
 ```
 
 ## Usage
@@ -193,7 +197,10 @@ You can customize the crawler behavior using the `config.json` file:
 #### Crawler Options
 - `headless`: Run browser in headless mode (default: `true`)
 - `outputDir`: Directory for output files (default: `./output`)
-- `executablePath`: Path to Chrome/Chromium executable (default: `null`, uses bundled Chromium)
+- `executablePath`: Path to Chrome/Chromium executable (default: `null`, uses bundled Chromium or `CHROME_PATH` environment variable)
+
+#### Environment Variables
+- `CHROME_PATH`: Optional path to Chrome/Chromium executable (used by test scripts and can be used in custom implementations)
 
 #### jusText Options
 - `language`: Stoplist language for text filtering (default: `'English'`)

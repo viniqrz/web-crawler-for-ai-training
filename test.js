@@ -9,7 +9,8 @@ async function test() {
   const crawler = new WikipediaCrawler({
     headless: true,
     outputDir: './output',
-    executablePath: '/usr/bin/google-chrome'
+    // Use system Chrome if available, otherwise let Puppeteer use its default
+    executablePath: process.env.CHROME_PATH || undefined
   });
 
   try {
