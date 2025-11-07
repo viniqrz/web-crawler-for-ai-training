@@ -207,7 +207,8 @@ class DataPipeline {
     const alphaChars = (text.match(/[a-zA-Z]/g) || []).length;
     const digitChars = (text.match(/\d/g) || []).length;
     const uppercaseChars = (text.match(/[A-Z]/g) || []).length;
-    const symbolChars = totalChars - alphaChars - digitChars - uppercaseChars;
+    const whitespaceChars = (text.match(/\s/g) || []).length;
+    const symbolChars = totalChars - alphaChars - digitChars - whitespaceChars;
 
     // Line analysis
     const linesEndingWithPunctuation = lines.filter(line => 
