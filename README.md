@@ -469,6 +469,63 @@ The crawler uses the following jusText parameters optimized for Wikipedia:
 - **Max Link Density**: 0.2 (maximum ratio of link text)
 - **Max Heading Distance**: 200 (maximum distance from heading)
 
+## Data Pipeline Details
+
+The C4-like data pipeline provides comprehensive quality filtering similar to the processing used for the Colossal Clean Crawled Corpus (C4) dataset. The pipeline applies multiple filters to ensure high-quality training data:
+
+### Language Identification
+
+Uses statistical language detection (via `franc-min`) to identify and filter content by language:
+- Supports any ISO 639-3 language code
+- Configurable confidence threshold
+- Returns top language predictions with confidence scores
+- Filters out content in unwanted languages
+
+### Quality Heuristics
+
+Multiple heuristic filters ensure content quality:
+
+**Text Length Filters:**
+- Minimum and maximum text length (characters)
+- Minimum word count
+- Average word length bounds
+
+**Structure Filters:**
+- Minimum ratio of lines ending with punctuation (indicates proper sentences)
+- Maximum bullet-point ratio (reduces list-heavy content)
+- Maximum ellipsis ratio (reduces incomplete content)
+
+**Content Composition Filters:**
+- Maximum symbol-to-word ratio
+- Maximum digit ratio (reduces numerical tables and data)
+- Maximum uppercase ratio (reduces all-caps and low-quality text)
+- Minimum unique words ratio (ensures content variety)
+
+### N-gram Deduplication
+
+Removes duplicate and near-duplicate content using n-gram overlap:
+- Generates word-based n-grams (default: 13 words)
+- Tracks seen n-grams across all processed documents
+- Configurable overlap threshold (default: 80%)
+- Memory-efficient incremental processing
+
+### Pipeline Output
+
+For each document, the pipeline provides:
+- **Pass/Fail Status**: Whether the document passed all filters
+- **Detailed Metrics**: Text statistics (word count, ratios, etc.)
+- **Filter Results**: Which specific filters failed (if any)
+- **Language Detection**: Detected language with confidence
+- **Deduplication Info**: N-gram overlap statistics
+
+### Batch Processing Statistics
+
+When processing multiple documents:
+- Total/passed/failed counts
+- Pass rate percentage
+- Breakdown of failure reasons
+- Memory usage estimates
+
 ## Dependencies
 
 - **puppeteer**: Headless Chrome browser automation
