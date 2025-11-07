@@ -1,0 +1,20 @@
+{
+  "crawler": {
+    "headless": true,
+    "outputDir": "./output",
+    "executablePath": null
+  },
+  "justext": {
+    "language": "English",
+    "lengthLow": 70,
+    "lengthHigh": 200,
+    "stopwordsLow": 0.30,
+    "stopwordsHigh": 0.32,
+    "maxLinkDensity": 0.2,
+    "maxHeadingDistance": 200
+  },
+  "crawling": {
+    "delayBetweenRequests": 1000,
+    "timeout": 30000
+  }
+}
