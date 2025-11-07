@@ -19,7 +19,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "puppeteer": "^22.0.0",
-    "@smodin/justext": "^0.1.1"
+    "@smodin/justext": "^0.1.1",
+    "franc-min": "^6.2.0",
+    "puppeteer": "^22.0.0"
   }
 }

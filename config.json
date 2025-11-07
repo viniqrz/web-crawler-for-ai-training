@@ -16,5 +16,24 @@
   "crawling": {
     "delayBetweenRequests": 1000,
     "timeout": 30000
+  },
+  "pipeline": {
+    "targetLanguages": ["eng"],
+    "minLanguageConfidence": 0.5,
+    "minTextLength": 100,
+    "maxTextLength": 100000,
+    "minWordCount": 20,
+    "minAvgWordLength": 3,
+    "maxAvgWordLength": 15,
+    "minLinesEndingWithPunctuation": 0.5,
+    "maxBulletPointRatio": 0.5,
+    "maxEllipsisLineRatio": 0.3,
+    "maxSymbolToWordRatio": 0.1,
+    "maxDigitRatio": 0.15,
+    "maxUppercaseRatio": 0.2,
+    "minUniqueWordsRatio": 0.3,
+    "maxRepetitiveNGramRatio": 0.15,
+    "ngramSize": 13,
+    "ngramOverlapThreshold": 0.8
   }
 }
