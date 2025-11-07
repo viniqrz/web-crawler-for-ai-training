@@ -202,12 +202,26 @@ class DataPipeline {
     const words = text.split(/\s+/).filter(word => word.length > 0);
     const uniqueWords = new Set(words.map(w => w.toLowerCase()));
     
-    // Character counts
+    // Character counts - optimized single pass
     const totalChars = text.length;
-    const alphaChars = (text.match(/[a-zA-Z]/g) || []).length;
-    const digitChars = (text.match(/\d/g) || []).length;
-    const uppercaseChars = (text.match(/[A-Z]/g) || []).length;
-    const whitespaceChars = (text.match(/\s/g) || []).length;
+    let alphaChars = 0;
+    let digitChars = 0;
+    let uppercaseChars = 0;
+    let whitespaceChars = 0;
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (/[a-zA-Z]/.test(char)) {
+        alphaChars++;
+        if (/[A-Z]/.test(char)) uppercaseChars++;
+      } else if (/\d/.test(char)) {
+        digitChars++;
+      } else if (/\s/.test(char)) {
+        whitespaceChars++;
+      }
+    }
+    
+    // Symbols are everything else (punctuation, special chars, etc.)
     const symbolChars = totalChars - alphaChars - digitChars - whitespaceChars;
 
     // Line analysis

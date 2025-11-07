@@ -13,8 +13,9 @@ async function test() {
       minTextLength: 50,
       minWordCount: 10,
       ngramSize: 5,
-      maxSymbolToWordRatio: 1.0, // More lenient
-      minLinesEndingWithPunctuation: 0.3 // More lenient
+      // Relaxed thresholds for testing to allow test documents to pass
+      maxSymbolToWordRatio: 1.0, // Default is 0.1, relaxed to allow punctuation in test docs
+      minLinesEndingWithPunctuation: 0.3 // Default is 0.5, relaxed for shorter test content
     });
     console.log('✓ Pipeline initialized successfully\n');
 
