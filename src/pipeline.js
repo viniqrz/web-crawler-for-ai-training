@@ -1,4 +1,4 @@
-import { franc } from 'franc-min';
+import { francAll } from 'franc-min';
 
 /**
  * DataPipeline - A C4-like data processing pipeline for cleaning and filtering
@@ -10,7 +10,7 @@ class DataPipeline {
     this.options = {
       // Language filtering
       targetLanguages: options.targetLanguages || ['eng'], // ISO 639-3 codes
-      minLanguageConfidence: options.minLanguageConfidence || 0.5, // Note: not used with franc (only francAll supports confidence)
+      minLanguageConfidence: options.minLanguageConfidence || 0.5,
       
       // Quality filtering heuristics
       minTextLength: options.minTextLength || 100,
@@ -156,9 +156,9 @@ class DataPipeline {
   identifyLanguage(text) {
     try {
       // Use franc to detect language
-      const detectedLang = franc(text, { minLength: 10 });
+      const languages = francAll(text, { minLength: 10 });
       
-      if (!detectedLang || detectedLang === 'und') {
+      if (!languages || languages.length === 0 || languages[0][0] === 'und') {
         return {
           passed: false,
           detected: 'undetermined',
@@ -167,16 +167,20 @@ class DataPipeline {
         };
       }
 
-      // franc returns only the language code, so we assume 100% confidence when detected
-      const confidence = 1.0;
+      const [detectedLang, confidence] = languages[0];
       
-      const passed = this.options.targetLanguages.includes(detectedLang);
+      const passed = this.options.targetLanguages.includes(detectedLang) &&
+                    confidence >= this.options.minLanguageConfidence;
 
       return {
         passed,
         detected: detectedLang,
         confidence: confidence,
-        reason: !passed ? `Language ${detectedLang} not in target languages` : null
+        allDetections: languages.slice(0, 3).map(([lang, conf]) => ({
+          language: lang,
+          confidence: conf
+        })),
+        reason: !passed ? `Language ${detectedLang} not in target languages or low confidence (${confidence.toFixed(2)})` : null
       };
     } catch (error) {
       return {
