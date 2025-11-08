@@ -13,6 +13,7 @@ A Puppeteer-based web crawler designed to gather Wikipedia pages data and filter
 - 💾 **Data Export**: Save crawled data in structured JSON format
 - ⚡ **Multiple Pages**: Support for crawling multiple Wikipedia URLs
 - 🎯 **Clean Content**: Extracts only the main article content for AI training purposes
+- 🔍 **C4-like Data Pipeline**: Quality filtering with language identification, heuristics-based filtering, and n-gram deduplication
 
 ## Installation
 
@@ -89,7 +90,21 @@ This example demonstrates:
 - URL tree visualization in markdown format
 - Progress tracking and statistics
 
-#### 6. Standalone Example
+#### 6. Data Pipeline Example
+Process crawled content with C4-like quality filtering:
+
+```bash
+node examples/pipeline-example.js
+```
+
+This example demonstrates:
+- Language identification for filtering non-English content
+- Quality heuristics (text length, word count, punctuation ratio, etc.)
+- N-gram based deduplication to remove repetitive content
+- Statistical analysis and filtering metrics
+- Exporting both filtered and unfiltered results
+
+#### 7. Standalone Example
 A simpler standalone example:
 
 ```bash
@@ -134,6 +149,38 @@ const recursiveResult = await crawler.crawlRecursive(
 // Save results
 await crawler.saveToFile(results, 'my_results.json');
 await crawler.saveTreeToMarkdown(recursiveResult.linkTree, 'url_tree.md');
+
+await crawler.close();
+```
+
+#### Using the Data Pipeline
+
+Process crawled content with C4-like quality filtering:
+
+```javascript
+import WikipediaCrawler from './src/crawler.js';
+import DataPipeline from './src/pipeline.js';
+
+const crawler = new WikipediaCrawler({ headless: true });
+const pipeline = new DataPipeline({
+  targetLanguages: ['eng'],
+  minTextLength: 100,
+  ngramSize: 13
+});
+
+await crawler.init();
+
+// Crawl pages
+const crawledData = await crawler.crawlMultiple(urls);
+
+// Process through pipeline
+const pipelineResults = await pipeline.processBatch(crawledData);
+
+console.log(`Passed: ${pipelineResults.stats.passed}/${pipelineResults.stats.total}`);
+
+// Export only filtered (quality-approved) documents
+const filteredDocs = pipeline.exportFiltered(pipelineResults.results);
+await crawler.saveToFile(filteredDocs, 'filtered_results.json');
 
 await crawler.close();
 ```
@@ -213,6 +260,94 @@ Save the link tree as a markdown file with tree visualization.
 ##### `async close()`
 Close the browser and cleanup resources.
 
+### DataPipeline Class
+
+A C4-like data processing pipeline for quality filtering, language identification, and deduplication of crawled content.
+
+#### Constructor Options
+
+- `targetLanguages` (Array<string>): ISO 639-3 language codes to accept. Default: `['eng']`
+- `minLanguageConfidence` (number): Minimum confidence for language detection (0-1). Default: `0.5`
+- `minTextLength` (number): Minimum text length in characters. Default: `100`
+- `maxTextLength` (number): Maximum text length in characters. Default: `100000`
+- `minWordCount` (number): Minimum word count. Default: `20`
+- `minAvgWordLength` (number): Minimum average word length. Default: `3`
+- `maxAvgWordLength` (number): Maximum average word length. Default: `15`
+- `minLinesEndingWithPunctuation` (number): Minimum ratio of lines ending with punctuation. Default: `0.5`
+- `maxBulletPointRatio` (number): Maximum ratio of bullet-point lines. Default: `0.5`
+- `maxEllipsisLineRatio` (number): Maximum ratio of lines with ellipsis. Default: `0.3`
+- `maxSymbolToWordRatio` (number): Maximum ratio of symbols to words. Default: `0.1`
+- `maxDigitRatio` (number): Maximum ratio of digits in text. Default: `0.15`
+- `maxUppercaseRatio` (number): Maximum ratio of uppercase letters. Default: `0.2`
+- `minUniqueWordsRatio` (number): Minimum ratio of unique words. Default: `0.3`
+- `ngramSize` (number): N-gram size for deduplication. Default: `13`
+- `ngramOverlapThreshold` (number): Maximum n-gram overlap ratio for duplicates. Default: `0.8`
+
+#### Methods
+
+##### `async processDocument(document)`
+Process a single document through the quality filtering pipeline.
+
+**Parameters:**
+- `document` (Object): Document object with `filteredText` or `text` property
+
+**Returns:** Object containing:
+- Original document properties
+- `pipeline.passed` (boolean): Whether document passed all filters
+- `pipeline.filters` (Object): Results of each filter check
+- `pipeline.metrics` (Object): Calculated quality metrics
+
+##### `async processBatch(documents)`
+Process multiple documents through the pipeline.
+
+**Parameters:**
+- `documents` (Array<Object>): Array of document objects
+
+**Returns:** Object containing:
+- `results` (Array): Processed documents with pipeline metadata
+- `stats` (Object): Processing statistics including pass/fail counts and failure reasons
+- `passRate` (number): Ratio of documents that passed (0-1)
+
+##### `identifyLanguage(text)`
+Identify the language of text content.
+
+**Parameters:**
+- `text` (string): Text to analyze
+
+**Returns:** Object with language detection results
+
+##### `calculateMetrics(text)`
+Calculate various text quality metrics.
+
+**Parameters:**
+- `text` (string): Text to analyze
+
+**Returns:** Object with metrics like word count, text length, ratios, etc.
+
+##### `generateNGrams(text, n)`
+Generate n-grams from text for deduplication.
+
+**Parameters:**
+- `text` (string): Text to process
+- `n` (number): N-gram size (optional, uses constructor option if not provided)
+
+**Returns:** Array of n-gram strings
+
+##### `exportFiltered(processedResults)`
+Export only documents that passed all filters.
+
+**Parameters:**
+- `processedResults` (Array): Results from `processBatch()`
+
+**Returns:** Array of clean documents (without pipeline metadata)
+
+##### `reset()`
+Reset the pipeline state, clearing stored n-grams.
+
+##### `getStats()`
+Get pipeline statistics including processed document count and memory usage.
+Close the browser and cleanup resources.
+
 ## Output Format
 
 The crawler produces JSON output with the following structure:
@@ -252,6 +387,15 @@ You can customize the crawler behavior using the `config.json` file:
   "crawling": {
     "delayBetweenRequests": 1000,
     "timeout": 30000
+  },
+  "pipeline": {
+    "targetLanguages": ["eng"],
+    "minLanguageConfidence": 0.5,
+    "minTextLength": 100,
+    "maxTextLength": 100000,
+    "minWordCount": 20,
+    "ngramSize": 13,
+    "ngramOverlapThreshold": 0.8
   }
 }
 ```
@@ -279,6 +423,24 @@ You can customize the crawler behavior using the `config.json` file:
 - `delayBetweenRequests`: Delay in milliseconds between page requests (default: `1000`)
 - `timeout`: Page load timeout in milliseconds (default: `30000`)
 
+#### Data Pipeline Options
+- `targetLanguages`: Array of ISO 639-3 language codes to accept (default: `['eng']`)
+- `minLanguageConfidence`: Minimum confidence for language detection 0-1 (default: `0.5`)
+- `minTextLength`: Minimum text length in characters (default: `100`)
+- `maxTextLength`: Maximum text length in characters (default: `100000`)
+- `minWordCount`: Minimum word count (default: `20`)
+- `minAvgWordLength`: Minimum average word length (default: `3`)
+- `maxAvgWordLength`: Maximum average word length (default: `15`)
+- `minLinesEndingWithPunctuation`: Minimum ratio of lines ending with punctuation (default: `0.5`)
+- `maxBulletPointRatio`: Maximum ratio of bullet-point lines (default: `0.5`)
+- `maxEllipsisLineRatio`: Maximum ratio of lines with ellipsis (default: `0.3`)
+- `maxSymbolToWordRatio`: Maximum ratio of symbols to words (default: `0.1`)
+- `maxDigitRatio`: Maximum ratio of digits in text (default: `0.15`)
+- `maxUppercaseRatio`: Maximum ratio of uppercase letters (default: `0.2`)
+- `minUniqueWordsRatio`: Minimum ratio of unique words (default: `0.3`)
+- `ngramSize`: N-gram size for deduplication (default: `13`)
+- `ngramOverlapThreshold`: Maximum n-gram overlap ratio for duplicates (default: `0.8`)
+
 ## How It Works
 
 1. **Puppeteer Navigation**: The crawler uses Puppeteer to navigate to Wikipedia pages with full JavaScript support
@@ -288,7 +450,12 @@ You can customize the crawler behavior using the `config.json` file:
    - Remove navigation, headers, footers, and other boilerplate
    - Filter based on text density, stopword analysis, and link density
 4. **Data Structuring**: Organizes extracted content with metadata
-5. **Export**: Saves results in JSON format for easy consumption by AI training pipelines
+5. **Data Pipeline (Optional)**: Process content through C4-like quality filters:
+   - **Language Identification**: Detect and filter by language using statistical analysis
+   - **Quality Heuristics**: Apply multiple text quality filters (length, word count, punctuation, etc.)
+   - **N-gram Deduplication**: Remove duplicate or near-duplicate content using 13-word n-grams
+   - **Statistical Analysis**: Generate detailed metrics and filtering reports
+6. **Export**: Saves results in JSON format for easy consumption by AI training pipelines
 
 ## jusText Configuration
 
@@ -302,10 +469,68 @@ The crawler uses the following jusText parameters optimized for Wikipedia:
 - **Max Link Density**: 0.2 (maximum ratio of link text)
 - **Max Heading Distance**: 200 (maximum distance from heading)
 
+## Data Pipeline Details
+
+The C4-like data pipeline provides comprehensive quality filtering similar to the processing used for the Colossal Clean Crawled Corpus (C4) dataset. The pipeline applies multiple filters to ensure high-quality training data:
+
+### Language Identification
+
+Uses statistical language detection (via `franc-min`) to identify and filter content by language:
+- Supports any ISO 639-3 language code
+- Configurable confidence threshold
+- Returns top language predictions with confidence scores
+- Filters out content in unwanted languages
+
+### Quality Heuristics
+
+Multiple heuristic filters ensure content quality:
+
+**Text Length Filters:**
+- Minimum and maximum text length (characters)
+- Minimum word count
+- Average word length bounds
+
+**Structure Filters:**
+- Minimum ratio of lines ending with punctuation (indicates proper sentences)
+- Maximum bullet-point ratio (reduces list-heavy content)
+- Maximum ellipsis ratio (reduces incomplete content)
+
+**Content Composition Filters:**
+- Maximum symbol-to-word ratio
+- Maximum digit ratio (reduces numerical tables and data)
+- Maximum uppercase ratio (reduces all-caps and low-quality text)
+- Minimum unique words ratio (ensures content variety)
+
+### N-gram Deduplication
+
+Removes duplicate and near-duplicate content using n-gram overlap:
+- Generates word-based n-grams (default: 13 words)
+- Tracks seen n-grams across all processed documents
+- Configurable overlap threshold (default: 80%)
+- Memory-efficient incremental processing
+
+### Pipeline Output
+
+For each document, the pipeline provides:
+- **Pass/Fail Status**: Whether the document passed all filters
+- **Detailed Metrics**: Text statistics (word count, ratios, etc.)
+- **Filter Results**: Which specific filters failed (if any)
+- **Language Detection**: Detected language with confidence
+- **Deduplication Info**: N-gram overlap statistics
+
+### Batch Processing Statistics
+
+When processing multiple documents:
+- Total/passed/failed counts
+- Pass rate percentage
+- Breakdown of failure reasons
+- Memory usage estimates
+
 ## Dependencies
 
 - **puppeteer**: Headless Chrome browser automation
 - **@smodin/justext**: Text extraction and boilerplate removal
+- **franc-min**: Language identification for quality filtering
 
 ## Security Note
 
